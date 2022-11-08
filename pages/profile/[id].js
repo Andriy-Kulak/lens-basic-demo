@@ -1,70 +1,71 @@
-import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
-import { ethers } from "ethers";
-import Image from "next/image";
-import { client, getPublications, getProfiles } from "../../api";
-import ABI from "../../abi.json";
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
+import { Button } from '@chakra-ui/react'
+import { ethers } from 'ethers'
+import Image from 'next/image'
+import { client, getPublications, getProfiles } from '../../api'
+import ABI from '../../abi.json'
 
-const CONTRACT_ADDRESS = "0xDb46d1Dc155634FbC732f92E853b10B288AD5a1d";
+const CONTRACT_ADDRESS = '0xDb46d1Dc155634FbC732f92E853b10B288AD5a1d'
 
 export default function Profile() {
-  const [profile, setProfile] = useState();
-  const [publications, setPublications] = useState([]);
-  const [account, setAccount] = useState("");
-  const router = useRouter();
-  const { id } = router.query;
+  const [profile, setProfile] = useState()
+  const [publications, setPublications] = useState([])
+  const [account, setAccount] = useState('')
+  const router = useRouter()
+  const { id } = router.query
 
   useEffect(() => {
     if (id) {
-      fetchProfile();
+      fetchProfile()
     }
-  }, [id]);
+  }, [id])
 
   async function fetchProfile() {
     try {
       const returnedProfile = await client
         .query(getProfiles, { id })
-        .toPromise();
-      const profileData = returnedProfile.data.profiles.items[0];
-      setProfile(profileData);
+        .toPromise()
+      const profileData = returnedProfile.data.profiles.items[0]
+      setProfile(profileData)
 
       const pubs = await client
         .query(getPublications, { id, limit: 50 })
-        .toPromise();
+        .toPromise()
 
-      setPublications(pubs.data.publications.items);
+      setPublications(pubs.data.publications.items)
     } catch (err) {
-      console.log("error fetching profile...", err);
+      console.log('error fetching profile...', err)
     }
   }
 
   async function connectWallet() {
     const accounts = await window.ethereum.request({
-      method: "eth_requestAccounts",
-    });
-    console.log("accounts: ", accounts[0]);
+      method: 'eth_requestAccounts',
+    })
+    console.log('accounts: ', accounts[0])
 
-    setAccount(accounts[0]);
+    setAccount(accounts[0])
   }
 
   function getSigner() {
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    return provider.getSigner();
+    const provider = new ethers.providers.Web3Provider(window.ethereum)
+    return provider.getSigner()
   }
 
   async function followUser() {
-    const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, getSigner());
+    const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, getSigner())
 
     try {
-      const tx = await contract.follow([id], [0x0]);
-      await tx.wait();
-      console.log(`successfully followed ... ${profile.handle}`);
+      const tx = await contract.follow([id], [0x0])
+      await tx.wait()
+      console.log(`successfully followed ... ${profile.handle}`)
     } catch (err) {
-      console.log("error: ", err);
+      console.log('error: ', err)
     }
   }
 
-  if (!profile) return null;
+  if (!profile) return null
 
   return (
     <div style={paddingStyle}>
@@ -72,7 +73,7 @@ export default function Profile() {
         {account ? (
           <h4>Signed in as {account}</h4>
         ) : (
-          <button onClick={connectWallet}>Sign In</button>
+          <Button onClick={connectWallet}>Sign In</Button>
         )}
         <br />
         <Image
@@ -83,22 +84,22 @@ export default function Profile() {
         />
         <p>{profile.handle}</p>
         {publications.map((pub, index) => (
-          <div key={index} style={{ border: "1px solid grey" }}>
+          <div key={index} style={{ border: '1px solid grey' }}>
             <p>{pub.metadata.content}</p>
           </div>
         ))}
-        <button onClick={followUser}>Follow User</button>
+        <Button onClick={followUser}>Follow User</Button>
       </div>
     </div>
-  );
+  )
 }
 
 const profileContainerStyle = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "flex-start",
-};
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'flex-start',
+}
 
 const paddingStyle = {
-  padding: "20px",
-};
+  padding: '20px',
+}
